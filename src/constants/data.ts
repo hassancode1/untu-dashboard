@@ -8,17 +8,12 @@ export const navItems: NavItem[] = [
     label: 'Dashboard'
   },
   {
-    title: 'Students',
-    href: '/student',
-    icon: 'user',
-    label: 'Student'
+    title: 'Category',
+    href: '/category',
+    icon: 'post',
+    label: 'Category'
   },
-  {
-    title: 'Login',
-    href: '/login',
-    icon: 'login',
-    label: 'Login'
-  }
+ 
 ];
 
 export const users = [
@@ -149,3 +144,9 @@ export type Employee = {
   job: string;
   profile_picture?: string | null; // Profile picture can be a string (URL) or null (if no picture)
 };
+
+
+export type Category ={
+  id:string;
+  name:string
+}

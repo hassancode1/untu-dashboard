@@ -7,6 +7,7 @@ import { ErrorBoundary, FallbackProps } from 'react-error-boundary';
 import { HelmetProvider } from 'react-helmet-async';
 import { BrowserRouter } from 'react-router-dom';
 import ThemeProvider from './theme-provider';
+import { AuthProvider } from './AuthProvider';
 
 export const queryClient = new QueryClient();
 
@@ -37,6 +38,7 @@ export default function AppProvider({
 }) {
   return (
     <Suspense>
+      <AuthProvider>
       <HelmetProvider>
         <BrowserRouter>
           <ErrorBoundary FallbackComponent={ErrorFallback}>
@@ -49,6 +51,7 @@ export default function AppProvider({
           </ErrorBoundary>
         </BrowserRouter>
       </HelmetProvider>
+      </AuthProvider>
     </Suspense>
   );
 }

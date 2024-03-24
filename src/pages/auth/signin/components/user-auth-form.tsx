@@ -11,11 +11,13 @@ import { Input } from '@/components/ui/input';
 import { useRouter } from '@/routes/hooks';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
+import supabase from '@/lib/supabase';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 
 const formSchema = z.object({
-  email: z.string().email({ message: 'Enter a valid email address' })
+  email: z.string().email({ message: 'Enter a valid email address' }),
+  password: z.string().min(1, "Please enter a password"),
 });
 
 type UserFormValue = z.infer<typeof formSchema>;
@@ -23,18 +25,30 @@ type UserFormValue = z.infer<typeof formSchema>;
 export default function UserAuthForm() {
   const router = useRouter();
   const [loading] = useState(false);
-  const defaultValues = {
-    email: 'demo@gmail.com'
-  };
-  const form = useForm<UserFormValue>({
-    resolver: zodResolver(formSchema),
-    defaultValues
-  });
 
-  const onSubmit = async (data: UserFormValue) => {
-    console.log('data', data);
-    router.push('/');
+  const form = useForm<UserFormValue>({
+    resolver: zodResolver(formSchema)
+  });
+  const handleLogin = async (data: UserFormValue) => {
+    const {email , password} = data
+    try {
+      const {  error } = await supabase.auth.signInWithPassword({ email, password })
+
+
+      if (error) {
+        throw error;
+      }
+      router.push('/');
+
+    } catch (error) {
+      console.error('Error Logging up:',);
+    }
   };
+  const onSubmit = async (data: UserFormValue) => {
+    handleLogin(data)
+
+  };
+  
 
   return (
     <>
@@ -61,22 +75,31 @@ export default function UserAuthForm() {
               </FormItem>
             )}
           />
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>password</FormLabel>
+                <FormControl>
+                  <Input
+                    type="password"
+                    placeholder="Enter password..."
+                    disabled={loading}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-          <Button disabled={loading} className="ml-auto w-full" type="submit">
-            Continue With Email
+          <Button disabled={loading} className="ml-auto w-full mt-7" type="submit">
+            Login
           </Button>
         </form>
       </Form>
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">
-            Or continue with
-          </span>
-        </div>
-      </div>
+
     </>
   );
 }
