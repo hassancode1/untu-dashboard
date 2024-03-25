@@ -1,49 +1,40 @@
 import { useMemo, useState, useEffect } from 'react';
-import TableSearchInput from '@/components/shared/table-search-input';
-import CreateCategory from './categoryforms/CreateCategory';
-import { Categorycolumns } from '../Category/category-table/columns';
-import DataTable from '@/components/shared/data-table';
-import { Category } from '@/constants/data';
-import supabase from '@/lib/supabase';
-import { useToast } from "@/components/ui/use-toast"
 import { Modal } from '@/components/ui/modal';
-import { ScrollArea } from '@radix-ui/react-scroll-area';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import TableSearchInput from '@/components/shared/table-search-input';
+import CreateSize from './sizeforms/CreateSize';
+import { Sizecolumns } from './size-table/columns';
+import DataTable from '@/components/shared/data-table';
+import { Size } from '@/constants/data';
+import supabase from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { DataTableSkeleton } from '@/components/shared/data-table-skeleton';
+
 export default function StudentTableActions() {
-  const [openCategory, setOpenCategory] = useState<{ data: Category | object; show: boolean }>({ data: {}, show: false })
-  const [tableData, setTableData] = useState<Category[]>([])
-  const [loadingData, setLoadingData] = useState<boolean>(false)
+  const [openSize, setOpenSize] = useState<{ data: Size | object; show: boolean }>({ data: {}, show: false })
+  const [tableData, setTableData] = useState<Size[]>([])
+const [loadingData,setLoadingData] = useState<boolean>(false)
   const openEdit = (data) => {
-    setOpenCategory({ data: data, show: true })
- 
+    setOpenSize({ data: data, show: true })
   }
   const openModal = () =>{
-    setOpenCategory({data:{}, show:true})
+    setOpenSize({data:{}, show:true})
   }
-  const onClose = () =>{
-    setOpenCategory({data:{}, show:false})
+  const onClose = () => {
+    setOpenSize({ data: {}, show: false })
   }
-  const {toast}= useToast();
+  
   const onDelete = async (data) => { 
-  const {error} =  await supabase.from('Category').delete().eq('id',data.id);
+  const {error} =  await supabase.from('Size').delete().eq('id',data.id);
   if(error){
     throw error
-  }else{
-    toast({
-      className: (
-        'top-0 right-0 flex fixed md:max-w-[420px] md:top-4 md:right-4'
-      ),
-      title: "category deleted",
-      variant: "destructive", 
-    });
   }
   fetchData()
   }
   
 
-  const columns = useMemo(() => Categorycolumns({ openEdit, onDelete }), [])
+  const columns = useMemo(() => Sizecolumns({ openEdit, onDelete }), [])
  
   const fetchData = async () => {
     try {
@@ -54,14 +45,14 @@ export default function StudentTableActions() {
       }
       setTableData(data);
     } catch (error) {
-      
+      // Handle error
     } finally {
-      setLoadingData(false);
+      setLoadingData(false); 
     }
   };
-  useEffect(() => {
+  useEffect(() =>{
     fetchData()
-  }, [])
+  },[])
  
   if (loadingData) {
     return (
@@ -74,31 +65,28 @@ export default function StudentTableActions() {
       </div>
     );
   }
-
   return (
     <>
       <div className="flex items-center justify-between py-5 mx-4">
         <div className="flex flex-1 gap-4">
-          <TableSearchInput placeholder="Search Category Here" />
+          <TableSearchInput placeholder="Search Size Here" />
         </div>
         <div className="flex gap-3">
         <Button className="text-xs md:text-sm" onClick={() => openModal()}>
         <Plus className="mr-2 h-4 w-4" /> Add New
       </Button>
-      
-          
+     
         </div>
       </div>
       <Modal
-        isOpen={openCategory.show}
+        isOpen={openSize.show}
         onClose={onClose}
         className={'!bg-background !px-1'}
       >
         <ScrollArea className="h-[80dvh] px-6  ">
-        <CreateCategory modalClose={onClose} openCategory={openCategory}  fetchData={fetchData}/>
-        </ScrollArea>
+          <CreateSize modalClose={onClose} openSize={openSize}  fetchData={fetchData}/>
+          </ScrollArea>
       </Modal>
-     
       <div className=' w-[85%] mx-auto mt-5'>
         <DataTable columns={columns} data={tableData} pageCount={1} />
 

@@ -13,6 +13,12 @@ export const navItems: NavItem[] = [
     icon: 'post',
     label: 'Category'
   },
+  {
+    title: 'Size',
+    href: '/size',
+    icon: 'post',
+    label: 'Size'
+  },
  
 ];
 
@@ -147,6 +153,10 @@ export type Employee = {
 
 
 export type Category ={
+  id:string;
+  name:string
+}
+export type Size ={
   id:string;
   name:string
 }

@@ -10,6 +10,9 @@ const DashboardLayout = lazy(
 const Category = lazy(
   () => import("@/pages/Category")
 )
+const Size = lazy(
+  () => import("@/pages/Size")
+)
 const SignInPage = lazy(() => import('@/pages/auth/signin'));
 const DashboardPage = lazy(() => import('@/pages/dashboard'));
 const StudentPage = lazy(() => import('@/pages/students'));
@@ -44,6 +47,10 @@ export default function AppRouter() {
         {
           path: 'category',
           element:<PrivateRoutes ><Category /></PrivateRoutes> 
+        },
+        {
+          path: 'size',
+          element:<PrivateRoutes ><Size /></PrivateRoutes> 
         },
         {
           path: 'student/details',

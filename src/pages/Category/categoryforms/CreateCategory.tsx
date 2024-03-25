@@ -13,6 +13,9 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Category } from '@/constants/data';
 import supabase from '@/lib/supabase';
+import { useToast } from "@/components/ui/use-toast"
+
+
 const categoryFormSchema = z
   .object({
     categoryname: z.string().min(1, { message: 'category name is required' }),
@@ -25,16 +28,34 @@ interface Props {
   openCategory: ({ data: Category | object; show: boolean })
   fetchData: () => void
 }
-// {(openCategory.data as Category)?.name  ? "Edit" : "Add New"}
+
 const CreateCategory = ({ modalClose, openCategory, fetchData }: Props) => {
+  const defaultValues = {
+    categoryname:  (openCategory.data as Category)?.name 
+  }
+  const {toast} = useToast()
   const form = useForm<StudentFormSchemaType>({
     resolver: zodResolver(categoryFormSchema),
-    defaultValues: {}
+    defaultValues:defaultValues
   });
   const postCategories = async (values: StudentFormSchemaType) => {
     const { error } = await supabase.from('Category').insert({ name: values.categoryname }).single()
     if (error) {
-      throw error
+      toast({
+        className: (
+          'top-0 right-0 flex fixed md:max-w-[420px] md:top-4 md:right-4'
+        ),
+        title: `${error.details || "something wrong happened"}`,
+        variant: "destructive", 
+      });
+    }else{
+      toast({
+        className: (
+          'top-0 right-0 flex fixed md:max-w-[420px] md:top-4 md:right-4'
+        ),
+        title: "Category created successfully.",
+        variant: "default", 
+      });
     }
     modalClose()
     fetchData()
@@ -43,11 +64,28 @@ const CreateCategory = ({ modalClose, openCategory, fetchData }: Props) => {
   }
 
   const EditCategories = async (values: StudentFormSchemaType) => {
-    console.log(values)
     const CategoryId = (openCategory.data as Category)?.id
-    await supabase.from('Category').update({ name: values.categoryname }).eq('id', CategoryId);
+   const {error} = await supabase.from('Category').update({ name: values.categoryname }).eq('id', CategoryId);
+    if (error) {
+      toast({
+        className: (
+          'top-0 right-0 flex fixed md:max-w-[420px] md:top-4 md:right-4'
+        ),
+        title: `${error.details || "something wrong happened"}`,
+        variant: "destructive", 
+      });
+    }else{
+      toast({
+        className: (
+          'top-0 right-0 flex fixed md:max-w-[420px] md:top-4 md:right-4'
+        ),
+        title: "Category edited successfully.",
+        variant: "default", 
+      });
+    }
     modalClose()
     fetchData()
+   
   }
   const onSubmit = (values: StudentFormSchemaType) => {
     if ((openCategory.data as Category)?.id) {
