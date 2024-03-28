@@ -19,7 +19,12 @@ export const navItems: NavItem[] = [
     icon: 'post',
     label: 'Size'
   },
- 
+  {
+    title: 'Product',
+    href: '/product',
+    icon: 'post',
+    label: 'Product'
+  }
 ];
 
 export const users = [
@@ -151,12 +156,15 @@ export type Employee = {
   profile_picture?: string | null; // Profile picture can be a string (URL) or null (if no picture)
 };
 
-
-export type Category ={
-  id:string;
-  name:string
-}
-export type Size ={
-  id:string;
-  name:string
-}
+export type Category = {
+  id: string;
+  name: string;
+};
+export type Size = {
+  id: string;
+  name: string;
+};
+export type Product = {
+  id: string;
+  name: string;
+};

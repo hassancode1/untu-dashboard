@@ -55,6 +55,7 @@
     "clsx": "^2.1.0",
     "cmdk": "^1.0.0",
     "date-fns": "^3.6.0",
+    "dropzone": "^6.0.0-beta.2",
     "embla-carousel-react": "^8.0.0",
     "input-otp": "^1.2.2",
     "lucide-react": "^0.358.0",

@@ -3,19 +3,16 @@ import PrivateRoutes from './PrivateRoutes';
 import { Suspense, lazy } from 'react';
 import { Navigate, Outlet, useRoutes } from 'react-router-dom';
 
-
 const DashboardLayout = lazy(
   () => import('@/components/layout/dashboard-layout')
 );
-const Category = lazy(
-  () => import("@/pages/Category")
-)
-const Size = lazy(
-  () => import("@/pages/Size")
-)
+const Category = lazy(() => import('@/pages/Category'));
+const Size = lazy(() => import('@/pages/Size'));
+const Product = lazy(() => import('@/pages/Product'));
 const SignInPage = lazy(() => import('@/pages/auth/signin'));
 const DashboardPage = lazy(() => import('@/pages/dashboard'));
 const StudentPage = lazy(() => import('@/pages/students'));
+
 const StudentDetailPage = lazy(
   () => import('@/pages/students/StudentDetailPage')
 );
@@ -27,30 +24,55 @@ export default function AppRouter() {
     {
       path: '/',
       element: (
-        <PrivateRoutes >
-        <DashboardLayout>
-          <Suspense>
-            <Outlet />
-          </Suspense>
-        </DashboardLayout>
+        <PrivateRoutes>
+          <DashboardLayout>
+            <Suspense>
+              <Outlet />
+            </Suspense>
+          </DashboardLayout>
         </PrivateRoutes>
       ),
       children: [
         {
-          element:<PrivateRoutes ><DashboardPage /></PrivateRoutes> ,
+          element: (
+            <PrivateRoutes>
+              <DashboardPage />
+            </PrivateRoutes>
+          ),
           index: true
         },
         {
           path: 'student',
-          element:<PrivateRoutes >  <StudentPage /></PrivateRoutes>
+          element: (
+            <PrivateRoutes>
+              {' '}
+              <StudentPage />
+            </PrivateRoutes>
+          )
         },
         {
           path: 'category',
-          element:<PrivateRoutes ><Category /></PrivateRoutes> 
+          element: (
+            <PrivateRoutes>
+              <Category />
+            </PrivateRoutes>
+          )
         },
         {
           path: 'size',
-          element:<PrivateRoutes ><Size /></PrivateRoutes> 
+          element: (
+            <PrivateRoutes>
+              <Size />
+            </PrivateRoutes>
+          )
+        },
+        {
+          path: 'product',
+          element: (
+            <PrivateRoutes>
+              <Product />
+            </PrivateRoutes>
+          )
         },
         {
           path: 'student/details',
