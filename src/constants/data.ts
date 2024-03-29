@@ -167,4 +167,9 @@ export type Size = {
 export type Product = {
   id: string;
   name: string;
+  category:string;
+  size:string;
+  price:number;
+  description:string
+  images:string
 };

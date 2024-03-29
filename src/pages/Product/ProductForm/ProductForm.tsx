@@ -13,10 +13,12 @@ import { Input } from '@/components/ui/input';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { Product } from '@/constants/data';
+import { Category, Product } from '@/constants/data';
 import supabase from '@/lib/supabase';
 import { useEffect, useState } from 'react';
+import { Trash } from 'lucide-react';
 import { Size } from '@/constants/data';
+import { useToast } from "@/components/ui/use-toast"
 
 import {
   Select,
@@ -25,24 +27,32 @@ import {
   SelectItem,
   SelectContent
 } from '@/components/ui/select';
+import { v4 as uuidv4 } from 'uuid';
+import { Loader2 } from 'lucide-react';
 
 const productFormSchema = z.object({
   productname: z.string().min(1, { message: 'product name is required' }),
+  description: z.string().min(1, { message: 'description is required' }),
   size: z.string().min(1, { message: 'size is required' }),
   price: z.string().min(1, { message: 'Price is required' }),
   category: z.string().min(1, { message: 'Category is required' }),
-  image: z.string().min(1, { message: 'image is required' })
+  image: z.string().optional()
 });
 
 type StudentFormSchemaType = z.infer<typeof productFormSchema>;
 interface Props {
   modalClose: () => void;
   openProduct: { data: Product | object; show: boolean };
+  fetchData:() => void
 }
 
-const CreateProduct = ({ modalClose, openProduct }: Props) => {
+const CreateProduct = ({ modalClose, openProduct, fetchData }: Props) => {
   const defaultValues = {
-    productname: (openProduct.data as Product)?.name
+    productname: (openProduct.data as Product)?.name,
+    price: ((openProduct.data as Product)?.price || 0).toString(),
+    category: (openProduct.data as Product)?.category,
+    size: (openProduct.data as Product)?.size,
+    description: (openProduct.data as Product)?.description
   };
 
   const form = useForm<StudentFormSchemaType>({
@@ -51,13 +61,17 @@ const CreateProduct = ({ modalClose, openProduct }: Props) => {
   });
 
   const [size, setSize] = useState<Size[]>([]);
-  const [files, setFiles] = useState<File | undefined>();
-  const [preview, setpreview] = useState<string>('');
+  const [category, setCategory] = useState<Category[]>([]);
+  const [preview, setpreview] = useState<string[]>([]);
+  const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [isCreatingProduct, setIsCreatingProduct] = useState<boolean>(false);
+  const { toast } = useToast()
 
   const imageFileUrl =
-    'https://xwsfeqsmtvzdcxhmlvig.supabase.co/storage/v1/object/sign/image/';
+    `https://xwsfeqsmtvzdcxhmlvig.supabase.co/storage/v1/object/public/images/`
+ 
 
-  const fetchData = async () => {
+  const fetchSize = async () => {
     try {
       const { data, error } = await supabase.from('Size').select('*');
       if (error) {
@@ -71,29 +85,160 @@ const CreateProduct = ({ modalClose, openProduct }: Props) => {
     }
   };
   useEffect(() => {
-    fetchData();
+    fetchSize();
   }, []);
+  const fetchCategory = async () => {
+    try {
+      const { data, error } = await supabase.from('Category').select('*');
+      if (error) {
+        return;
+      }
 
-  const onSubmit = (value: StudentFormSchemaType) => {
-    if (typeof files === 'undefined') return;
-    const formData = new FormData();
-    formData.append('files', files);
+      setCategory(data);
+    } catch (error) {
+      // Handle error
+    } finally {
+    }
   };
-
+  useEffect(() => {
+    fetchCategory();
+  }, []);
+  useEffect(() => {
+    if (openProduct.data) {
+      const imagesData = (openProduct.data as Product)?.images;
+      const updatedPreview = imagesData ? JSON.parse(imagesData) : [];
+      setpreview(updatedPreview);
+    }
+  }, [openProduct.data]);
+ 
   async function handleImage(e: React.FormEvent<HTMLInputElement>) {
+    setIsUploading(true);
     const target = e.target as HTMLInputElement & {
       files: FileList;
     };
-    const file = target.files[0];
-    setFiles(file);
-    const formData = new FormData();
-    formData.append('file', file);
-    const { data, error } = await supabase.storage
-      .from('image')
-      .upload(file.name, file);
-    console.log(data);
-    setpreview(data?.path as string);
+    const files = target.files
+    const uploadedImageUrls: string[] = [];
+    if (preview.length >= 4) {
+      toast({
+        className: (
+          'top-0 right-0 flex fixed md:max-w-[420px] md:top-4 md:right-4'
+        ),
+        title: `${"You can upload a maximum of 4 images"}`,
+        variant: "destructive",
+      });
+      setIsUploading(false);
+      return
+    }
+
+
+    for (let file of files) {
+      const { data, error } = await supabase.storage
+        .from('images')
+        .upload(`${uuidv4()}_${file.name}`, file)
+
+      if (error) {
+        console.error('Error uploading image:', error);
+      }
+      uploadedImageUrls.push(data?.path as string);
+      setIsUploading(false);
+    }
+
+    form.setValue("image", JSON.stringify([...preview, ...uploadedImageUrls]));
+    setpreview((prevPreview) => [...prevPreview, ...uploadedImageUrls]);
   }
+
+  const removeImage = async (index: number, imagePath: string) => {
+    try {
+      const updatedPreview = [...preview];
+      updatedPreview.splice(index, 1);
+      setpreview(updatedPreview);
+       await supabase.storage
+        .from('images')
+        .remove([imagePath]);
+    
+    } catch (error) {
+      console.error('Error deleting image:', error);
+    }
+  };
+  const postProduct = async (values: StudentFormSchemaType) => {
+    setIsCreatingProduct(true);
+    const { productname, size, price, category, description } = values
+    const payload = {
+      name: productname,
+      size,
+      category,
+      price: parseInt(price),
+      description,
+      images: JSON.stringify(preview)
+    }
+ 
+    const { error } = await supabase.from('Product').insert(payload).single()
+    if (error) {
+      toast({
+        className: (
+          'top-0 right-0 flex fixed md:max-w-[420px] md:top-4 md:right-4'
+        ),
+        title: `${error.details || "something wrong happened"}`,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        className: (
+          'top-0 right-0 flex fixed md:max-w-[420px] md:top-4 md:right-4'
+        ),
+        title: "Product created successfully.",
+        variant: "default",
+      });
+    }
+    modalClose()
+    fetchData()
+    setIsCreatingProduct(false);
+  }
+ 
+  const editProduct = async (values: StudentFormSchemaType) => {
+    setIsCreatingProduct(true);
+    const { productname, size, price, category, description } = values
+    const payload = {
+      name: productname,
+      size,
+      category,
+      price: parseInt(price),
+      description,
+      images: JSON.stringify(preview)
+    }
+ 
+    const ProductId = (openProduct.data as Product)?.id
+   const {error} = await supabase.from('Product').update(payload).eq('id', ProductId);
+    if (error) {
+      toast({
+        className: (
+          'top-0 right-0 flex fixed md:max-w-[420px] md:top-4 md:right-4'
+        ),
+        title: `${error.details || "something wrong happened"}`,
+        variant: "destructive", 
+      });
+    }else{
+      toast({
+        className: (
+          'top-0 right-0 flex fixed md:max-w-[420px] md:top-4 md:right-4'
+        ),
+        title: "product edited successfully.",
+        variant: "default", 
+      });
+    }
+    modalClose()
+    fetchData()
+    setIsCreatingProduct(false);
+  }
+  const onSubmit = (value: StudentFormSchemaType) => {
+    if ((openProduct.data as Product)?.id) {
+    editProduct(value)
+    }else{
+      postProduct(value)
+    }
+  };
+
+
 
   return (
     <div className="px-2 ">
@@ -166,12 +311,12 @@ const CreateProduct = ({ modalClose, openProduct }: Props) => {
                       className="h-48   overflow-auto pb-4"
                       style={{ scrollBehavior: 'smooth' }}
                     >
-                      {size?.map((country) => (
+                      {size?.map((s) => (
                         <SelectItem
-                          key={country.id}
-                          value={country.id.toString()}
+                          key={s.id}
+                          value={s.name}
                         >
-                          {country.name}
+                          {s.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -200,12 +345,12 @@ const CreateProduct = ({ modalClose, openProduct }: Props) => {
                       className="h-48   overflow-auto pb-4"
                       style={{ scrollBehavior: 'smooth' }}
                     >
-                      {size?.map((country) => (
+                      {category?.map((s) => (
                         <SelectItem
-                          key={country.id}
-                          value={country.id.toString()}
+                          key={s.id}
+                          value={s.name}
                         >
-                          {country.name}
+                          {s.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -214,17 +359,32 @@ const CreateProduct = ({ modalClose, openProduct }: Props) => {
                 </FormItem>
               )}
             />
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem className="col-span-2">
+                  <FormLabel>description</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter description"
+                      {...field}
+                      className=" border  border-slate-300 px-4"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             {/* ///IMAGE Section */}
             <FormField
               control={form.control}
               name="image"
-              render={({}) => (
+              render={({ }) => (
                 <FormItem className="col-span-2">
                   <FormLabel>Choose images</FormLabel>
                   <FormControl>
                     <Input
-                      id="picture"
-                      name="image"
                       multiple
                       type="file"
                       accept="image/png, image/jpeg"
@@ -235,11 +395,23 @@ const CreateProduct = ({ modalClose, openProduct }: Props) => {
                 </FormItem>
               )}
             />
+
           </div>
-          {/* {preview.map((prev) =>{
-             <img src={imageFileUrl + user.id + imagename} alt="Preview" /> 
-          })}
-              */}
+
+
+          {isUploading ? <Loader2 className="flex items-center justify-center animate-spin mx-auto mt-3 w-[300px]" />
+            : preview.length > 0 && <div className="flex flex-wrap gap-3 mt-4 shadow-md p-4 ">
+              {preview.map((prev, index) => (
+                <div key={index} className="relative">
+
+                  <Trash className="h-6 w-6 absolute top-1 right-1 cursor-pointer text-red-700" aria-hidden="true"
+                    onClick={() => removeImage(index, prev)}
+                  />
+                  <img src={imageFileUrl + prev} alt="Preview" className="w-24 h-24 object-cover rounded-md" />
+                </div>
+              ))}
+            </div>}
+
 
           <div className="mt-[6rem] flex items-center justify-center gap-4">
             <Button
@@ -251,7 +423,10 @@ const CreateProduct = ({ modalClose, openProduct }: Props) => {
             >
               Cancel
             </Button>
-            <Button type="submit" className="rounded-full" size="lg">
+            <Button
+              type="submit"
+              loading={isCreatingProduct}
+              className="rounded-full" size="lg">
               Submit
             </Button>
           </div>

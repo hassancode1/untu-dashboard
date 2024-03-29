@@ -60,15 +60,15 @@ export default function DataTable<TData, TValue>({
     pageSize: fallbackPerPage
   });
 
-  React.useEffect(() => {
-    // Update the URL with the new page number and limit
-    setSearchParams({
-      ...Object.fromEntries(searchParams), // Spread the existing search params
-      page: (pageIndex + 1).toString(), // Update the page number (assuming pageIndex is 0-based)
-      limit: pageSize.toString() // Update the limit
-    });
-    // if search is there setting filter value
-  }, [pageIndex, pageSize, searchParams, setSearchParams]);
+  // React.useEffect(() => {
+  //   // Update the URL with the new page number and limit
+  //   setSearchParams({
+  //     ...Object.fromEntries(searchParams), // Spread the existing search params
+  //     page: (pageIndex + 1).toString(), // Update the page number (assuming pageIndex is 0-based)
+  //     limit: pageSize.toString() // Update the limit
+  //   });
+  //   // if search is there setting filter value
+  // }, [pageIndex, pageSize, searchParams, setSearchParams]);
 
   const table = useReactTable({
     data,
@@ -139,7 +139,7 @@ export default function DataTable<TData, TValue>({
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
 
-      <div className="flex flex-col items-center justify-end gap-2 space-x-2 py-4 sm:flex-row">
+      {/* <div className="flex flex-col items-center justify-end gap-2 space-x-2 py-4 sm:flex-row">
         <div className="flex w-full items-center justify-between">
           <div className="flex-1 text-sm text-muted-foreground">
             {table.getFilteredSelectedRowModel().rows.length} of{' '}
@@ -216,7 +216,7 @@ export default function DataTable<TData, TValue>({
             </Button>
           </div>
         </div>
-      </div>
+      </div> */}
     </>
   );
 }

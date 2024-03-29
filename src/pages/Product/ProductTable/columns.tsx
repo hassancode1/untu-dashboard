@@ -34,6 +34,18 @@ export const Productcolumns = ({
     accessorKey: 'name',
     header: 'NAME'
   },
+  {
+    accessorKey: 'size',
+    header: 'SIZE'
+  },
+  {
+    accessorKey: 'category',
+    header: 'CATEGORY'
+  },
+  {
+    accessorKey: 'price',
+    header: 'PRICE'
+  },
 
   {
     id: 'actions',
