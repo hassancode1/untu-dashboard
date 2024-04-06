@@ -46,7 +46,10 @@ export const Productcolumns = ({
     accessorKey: 'price',
     header: 'PRICE'
   },
-
+  {
+    accessorKey: 'quantity',
+    header: 'QUANTITY'
+  },
   {
     id: 'actions',
     cell: ({ row }) => (

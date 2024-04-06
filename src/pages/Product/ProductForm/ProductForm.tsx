@@ -18,7 +18,7 @@ import supabase from '@/lib/supabase';
 import { useEffect, useState } from 'react';
 import { Trash } from 'lucide-react';
 import { Size } from '@/constants/data';
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from '@/components/ui/use-toast';
 
 import {
   Select,
@@ -36,6 +36,7 @@ const productFormSchema = z.object({
   size: z.string().min(1, { message: 'size is required' }),
   price: z.string().min(1, { message: 'Price is required' }),
   category: z.string().min(1, { message: 'Category is required' }),
+  quantity: z.string().min(1, { message: 'quantity is required' }),
   image: z.string().optional()
 });
 
@@ -43,7 +44,7 @@ type StudentFormSchemaType = z.infer<typeof productFormSchema>;
 interface Props {
   modalClose: () => void;
   openProduct: { data: Product | object; show: boolean };
-  fetchData:() => void
+  fetchData: () => void;
 }
 
 const CreateProduct = ({ modalClose, openProduct, fetchData }: Props) => {
@@ -52,7 +53,8 @@ const CreateProduct = ({ modalClose, openProduct, fetchData }: Props) => {
     price: ((openProduct.data as Product)?.price || 0).toString(),
     category: (openProduct.data as Product)?.category,
     size: (openProduct.data as Product)?.size,
-    description: (openProduct.data as Product)?.description
+    description: (openProduct.data as Product)?.description,
+    quantity: (openProduct.data as Product)?.quantity
   };
 
   const form = useForm<StudentFormSchemaType>({
@@ -65,11 +67,9 @@ const CreateProduct = ({ modalClose, openProduct, fetchData }: Props) => {
   const [preview, setpreview] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [isCreatingProduct, setIsCreatingProduct] = useState<boolean>(false);
-  const { toast } = useToast()
+  const { toast } = useToast();
 
-  const imageFileUrl =
-    `https://xwsfeqsmtvzdcxhmlvig.supabase.co/storage/v1/object/public/images/`
- 
+  const imageFileUrl = `https://xwsfeqsmtvzdcxhmlvig.supabase.co/storage/v1/object/public/images/`;
 
   const fetchSize = async () => {
     try {
@@ -110,31 +110,29 @@ const CreateProduct = ({ modalClose, openProduct, fetchData }: Props) => {
       setpreview(updatedPreview);
     }
   }, [openProduct.data]);
- 
+
   async function handleImage(e: React.FormEvent<HTMLInputElement>) {
     setIsUploading(true);
     const target = e.target as HTMLInputElement & {
       files: FileList;
     };
-    const files = target.files
+    const files = target.files;
     const uploadedImageUrls: string[] = [];
     if (preview.length >= 4) {
       toast({
-        className: (
-          'top-0 right-0 flex fixed md:max-w-[420px] md:top-4 md:right-4'
-        ),
-        title: `${"You can upload a maximum of 4 images"}`,
-        variant: "destructive",
+        className:
+          'top-0 right-0 flex fixed md:max-w-[420px] md:top-4 md:right-4',
+        title: `${'You can upload a maximum of 4 images'}`,
+        variant: 'destructive'
       });
       setIsUploading(false);
-      return
+      return;
     }
-
 
     for (let file of files) {
       const { data, error } = await supabase.storage
         .from('images')
-        .upload(`${uuidv4()}_${file.name}`, file)
+        .upload(`${uuidv4()}_${file.name}`, file);
 
       if (error) {
         console.error('Error uploading image:', error);
@@ -143,7 +141,7 @@ const CreateProduct = ({ modalClose, openProduct, fetchData }: Props) => {
       setIsUploading(false);
     }
 
-    form.setValue("image", JSON.stringify([...preview, ...uploadedImageUrls]));
+    form.setValue('image', JSON.stringify([...preview, ...uploadedImageUrls]));
     setpreview((prevPreview) => [...prevPreview, ...uploadedImageUrls]);
   }
 
@@ -152,93 +150,91 @@ const CreateProduct = ({ modalClose, openProduct, fetchData }: Props) => {
       const updatedPreview = [...preview];
       updatedPreview.splice(index, 1);
       setpreview(updatedPreview);
-       await supabase.storage
-        .from('images')
-        .remove([imagePath]);
-    
+      await supabase.storage.from('images').remove([imagePath]);
     } catch (error) {
       console.error('Error deleting image:', error);
     }
   };
   const postProduct = async (values: StudentFormSchemaType) => {
     setIsCreatingProduct(true);
-    const { productname, size, price, category, description } = values
+    const { productname, size, price, category, description, quantity } =
+      values;
     const payload = {
       name: productname,
       size,
       category,
       price: parseInt(price),
       description,
+      quantity: parseInt(quantity),
       images: JSON.stringify(preview)
-    }
- 
-    const { error } = await supabase.from('Product').insert(payload).single()
+    };
+
+    const { error } = await supabase.from('Product').insert(payload).single();
     if (error) {
       toast({
-        className: (
-          'top-0 right-0 flex fixed md:max-w-[420px] md:top-4 md:right-4'
-        ),
-        title: `${error.details || "something wrong happened"}`,
-        variant: "destructive",
+        className:
+          'top-0 right-0 flex fixed md:max-w-[420px] md:top-4 md:right-4',
+        title: `${error.details || 'something wrong happened'}`,
+        variant: 'destructive'
       });
     } else {
       toast({
-        className: (
-          'top-0 right-0 flex fixed md:max-w-[420px] md:top-4 md:right-4'
-        ),
-        title: "Product created successfully.",
-        variant: "default",
+        className:
+          'top-0 right-0 flex fixed md:max-w-[420px] md:top-4 md:right-4',
+        title: 'Product created successfully.',
+        variant: 'default'
       });
     }
-    modalClose()
-    fetchData()
+    modalClose();
+    fetchData();
     setIsCreatingProduct(false);
-  }
- 
+  };
+
   const editProduct = async (values: StudentFormSchemaType) => {
     setIsCreatingProduct(true);
-    const { productname, size, price, category, description } = values
+    const { productname, size, price, category, description, quantity } =
+      values;
     const payload = {
       name: productname,
       size,
       category,
       price: parseInt(price),
+      quantity: parseInt(quantity),
       description,
       images: JSON.stringify(preview)
-    }
- 
-    const ProductId = (openProduct.data as Product)?.id
-   const {error} = await supabase.from('Product').update(payload).eq('id', ProductId);
+    };
+
+    const ProductId = (openProduct.data as Product)?.id;
+    const { error } = await supabase
+      .from('Product')
+      .update(payload)
+      .eq('id', ProductId);
     if (error) {
       toast({
-        className: (
-          'top-0 right-0 flex fixed md:max-w-[420px] md:top-4 md:right-4'
-        ),
-        title: `${error.details || "something wrong happened"}`,
-        variant: "destructive", 
+        className:
+          'top-0 right-0 flex fixed md:max-w-[420px] md:top-4 md:right-4',
+        title: `${error.details || 'something wrong happened'}`,
+        variant: 'destructive'
       });
-    }else{
+    } else {
       toast({
-        className: (
-          'top-0 right-0 flex fixed md:max-w-[420px] md:top-4 md:right-4'
-        ),
-        title: "product edited successfully.",
-        variant: "default", 
+        className:
+          'top-0 right-0 flex fixed md:max-w-[420px] md:top-4 md:right-4',
+        title: 'product edited successfully.',
+        variant: 'default'
       });
     }
-    modalClose()
-    fetchData()
+    modalClose();
+    fetchData();
     setIsCreatingProduct(false);
-  }
+  };
   const onSubmit = (value: StudentFormSchemaType) => {
     if ((openProduct.data as Product)?.id) {
-    editProduct(value)
-    }else{
-      postProduct(value)
+      editProduct(value);
+    } else {
+      postProduct(value);
     }
   };
-
-
 
   return (
     <div className="px-2 ">
@@ -312,10 +308,7 @@ const CreateProduct = ({ modalClose, openProduct, fetchData }: Props) => {
                       style={{ scrollBehavior: 'smooth' }}
                     >
                       {size?.map((s) => (
-                        <SelectItem
-                          key={s.id}
-                          value={s.name}
-                        >
+                        <SelectItem key={s.id} value={s.name}>
                           {s.name}
                         </SelectItem>
                       ))}
@@ -346,10 +339,7 @@ const CreateProduct = ({ modalClose, openProduct, fetchData }: Props) => {
                       style={{ scrollBehavior: 'smooth' }}
                     >
                       {category?.map((s) => (
-                        <SelectItem
-                          key={s.id}
-                          value={s.name}
-                        >
+                        <SelectItem key={s.id} value={s.name}>
                           {s.name}
                         </SelectItem>
                       ))}
@@ -376,11 +366,29 @@ const CreateProduct = ({ modalClose, openProduct, fetchData }: Props) => {
                 </FormItem>
               )}
             />
+            {/* quantity Name */}
+            <FormField
+              control={form.control}
+              name="quantity"
+              render={({ field }) => (
+                <FormItem className="">
+                  <FormLabel>quantity</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="0"
+                      {...field}
+                      className=" border border-slate-300 px-4"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             {/* ///IMAGE Section */}
             <FormField
               control={form.control}
               name="image"
-              render={({ }) => (
+              render={({}) => (
                 <FormItem className="col-span-2">
                   <FormLabel>Choose images</FormLabel>
                   <FormControl>
@@ -395,23 +403,29 @@ const CreateProduct = ({ modalClose, openProduct, fetchData }: Props) => {
                 </FormItem>
               )}
             />
-
           </div>
-
-
-          {isUploading ? <Loader2 className="flex items-center justify-center animate-spin mx-auto mt-3 w-[300px]" />
-            : preview.length > 0 && <div className="flex flex-wrap gap-3 mt-4 shadow-md p-4 ">
-              {preview.map((prev, index) => (
-                <div key={index} className="relative">
-
-                  <Trash className="h-6 w-6 absolute top-1 right-1 cursor-pointer text-red-700" aria-hidden="true"
-                    onClick={() => removeImage(index, prev)}
-                  />
-                  <img src={imageFileUrl + prev} alt="Preview" className="w-24 h-24 object-cover rounded-md" />
-                </div>
-              ))}
-            </div>}
-
+          {isUploading ? (
+            <Loader2 className="mx-auto mt-3 flex w-[300px] animate-spin items-center justify-center" />
+          ) : (
+            preview.length > 0 && (
+              <div className="mt-4 flex flex-wrap gap-3 p-4 shadow-md ">
+                {preview.map((prev, index) => (
+                  <div key={index} className="relative">
+                    <Trash
+                      className="absolute right-1 top-1 h-6 w-6 cursor-pointer text-red-700"
+                      aria-hidden="true"
+                      onClick={() => removeImage(index, prev)}
+                    />
+                    <img
+                      src={imageFileUrl + prev}
+                      alt="Preview"
+                      className="h-24 w-24 rounded-md object-cover"
+                    />
+                  </div>
+                ))}
+              </div>
+            )
+          )}
 
           <div className="mt-[6rem] flex items-center justify-center gap-4">
             <Button
@@ -426,7 +440,9 @@ const CreateProduct = ({ modalClose, openProduct, fetchData }: Props) => {
             <Button
               type="submit"
               loading={isCreatingProduct}
-              className="rounded-full" size="lg">
+              className="rounded-full"
+              size="lg"
+            >
               Submit
             </Button>
           </div>

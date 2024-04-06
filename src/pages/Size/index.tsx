@@ -12,34 +12,36 @@ import { Plus } from 'lucide-react';
 import { DataTableSkeleton } from '@/components/shared/data-table-skeleton';
 
 export default function StudentTableActions() {
-  const [openSize, setOpenSize] = useState<{ data: Size | object; show: boolean }>({ data: {}, show: false })
-  const [tableData, setTableData] = useState<Size[]>([])
-const [loadingData,setLoadingData] = useState<boolean>(false)
+  const [openSize, setOpenSize] = useState<{
+    data: Size | object;
+    show: boolean;
+  }>({ data: {}, show: false });
+  const [tableData, setTableData] = useState<Size[]>([]);
+  const [loadingData, setLoadingData] = useState<boolean>(false);
   const openEdit = (data) => {
-    setOpenSize({ data: data, show: true })
-  }
-  const openModal = () =>{
-    setOpenSize({data:{}, show:true})
-  }
+    setOpenSize({ data: data, show: true });
+  };
+  const openModal = () => {
+    setOpenSize({ data: {}, show: true });
+  };
   const onClose = () => {
-    setOpenSize({ data: {}, show: false })
-  }
-  
-  const onDelete = async (data) => { 
-  const {error} =  await supabase.from('Size').delete().eq('id',data.id);
-  if(error){
-    throw error
-  }
-  fetchData()
-  }
-  
+    setOpenSize({ data: {}, show: false });
+  };
 
-  const columns = useMemo(() => Sizecolumns({ openEdit, onDelete }), [])
- 
+  const onDelete = async (data) => {
+    const { error } = await supabase.from('Size').delete().eq('id', data.id);
+    if (error) {
+      throw error;
+    }
+    fetchData();
+  };
+
+  const columns = useMemo(() => Sizecolumns({ openEdit, onDelete }), []);
+
   const fetchData = async () => {
     try {
       setLoadingData(true);
-      const { data, error } = await supabase.from('Category').select('*');
+      const { data, error } = await supabase.from('Size').select('*');
       if (error) {
         return;
       }
@@ -47,13 +49,13 @@ const [loadingData,setLoadingData] = useState<boolean>(false)
     } catch (error) {
       // Handle error
     } finally {
-      setLoadingData(false); 
+      setLoadingData(false);
     }
   };
-  useEffect(() =>{
-    fetchData()
-  },[])
- 
+  useEffect(() => {
+    fetchData();
+  }, []);
+
   if (loadingData) {
     return (
       <div className="p-5">
@@ -67,15 +69,14 @@ const [loadingData,setLoadingData] = useState<boolean>(false)
   }
   return (
     <>
-      <div className="flex items-center justify-between py-5 mx-4">
+      <div className="mx-4 flex items-center justify-between py-5">
         <div className="flex flex-1 gap-4">
           <TableSearchInput placeholder="Search Size Here" />
         </div>
         <div className="flex gap-3">
-        <Button className="text-xs md:text-sm" onClick={() => openModal()}>
-        <Plus className="mr-2 h-4 w-4" /> Add New
-      </Button>
-     
+          <Button className="text-xs md:text-sm" onClick={() => openModal()}>
+            <Plus className="mr-2 h-4 w-4" /> Add New
+          </Button>
         </div>
       </div>
       <Modal
@@ -84,12 +85,15 @@ const [loadingData,setLoadingData] = useState<boolean>(false)
         className={'!bg-background !px-1'}
       >
         <ScrollArea className="h-[80dvh] px-6  ">
-          <CreateSize modalClose={onClose} openSize={openSize}  fetchData={fetchData}/>
-          </ScrollArea>
+          <CreateSize
+            modalClose={onClose}
+            openSize={openSize}
+            fetchData={fetchData}
+          />
+        </ScrollArea>
       </Modal>
-      <div className=' w-[85%] mx-auto mt-5'>
+      <div className=" mx-auto mt-5 w-[85%]">
         <DataTable columns={columns} data={tableData} pageCount={1} />
-
       </div>
     </>
   );
