@@ -42,7 +42,7 @@ export function AuthProvider({ children }: AuthProviderProps): JSX.Element {
                     throw error;
                 }
                 setSession(data?.session || null);
-                setUser(data?.user || null);
+                setUser(session?.user || null);
                 setLoading(false);
             }
         };

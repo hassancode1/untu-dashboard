@@ -15,11 +15,9 @@ import Overview from './components/overview.js';
 import RecentSales from './components/recent-sales.js';
 import supabase from '@/lib/supabase.js';
 import { useState,useEffect } from 'react';
-import { Order } from '@/constants/data.js';
 import { DataTableSkeleton } from '@/components/shared/data-table-skeleton.js';
 
 export default function DashboardPage() {
-  const [overview , setOverview] = useState<Order[]>([])
   const [metrics, setMetrics] = useState({
     totalRevenue: 0,
     sales: 0,
@@ -54,7 +52,6 @@ export default function DashboardPage() {
   
       const average = sales > 0 ? totalRevenue / sales : 0;
       setMetrics({ totalRevenue, sales, activeNow: activeNowCount, averageOrder:average});
-      setOverview(data);
     } catch (error) {
     } finally {
       setLoading(false)
