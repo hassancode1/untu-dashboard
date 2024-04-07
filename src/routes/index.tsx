@@ -12,6 +12,8 @@ const Product = lazy(() => import('@/pages/Product'));
 const SignInPage = lazy(() => import('@/pages/auth/signin'));
 const DashboardPage = lazy(() => import('@/pages/dashboard'));
 const StudentPage = lazy(() => import('@/pages/students'));
+const Order = lazy(() => import("@/pages/Order"))
+const Orderdetails = lazy(() => import("@/pages/Order/Orderdetail/Orderdetails"))
 
 const StudentDetailPage = lazy(
   () => import('@/pages/students/StudentDetailPage')
@@ -71,6 +73,22 @@ export default function AppRouter() {
           element: (
             <PrivateRoutes>
               <Product />
+            </PrivateRoutes>
+          )
+        },
+        {
+          path: 'order',
+          element: (
+            <PrivateRoutes>
+              <Order />
+            </PrivateRoutes>
+          )
+        },
+        {
+          path: 'order/:id',
+          element: (
+            <PrivateRoutes>
+              <Orderdetails />
             </PrivateRoutes>
           )
         },

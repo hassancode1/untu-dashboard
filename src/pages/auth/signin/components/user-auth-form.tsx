@@ -13,6 +13,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import supabase from '@/lib/supabase';
 import { useForm } from 'react-hook-form';
+import { useToast } from '@/components/ui/use-toast';
 import * as z from 'zod';
 
 const formSchema = z.object({
@@ -24,25 +25,36 @@ type UserFormValue = z.infer<typeof formSchema>;
 
 export default function UserAuthForm() {
   const router = useRouter();
-  const [loading] = useState(false);
-
+  const [loading, setLoading] = useState(false);
+const {toast} = useToast()
   const form = useForm<UserFormValue>({
     resolver: zodResolver(formSchema)
   });
   const handleLogin = async (data: UserFormValue) => {
+    setLoading(true)
     const {email , password} = data
     try {
       const {  error } = await supabase.auth.signInWithPassword({ email, password })
-
-
       if (error) {
-        throw error;
+        toast({
+          className:
+            'top-0 right-0 flex fixed md:max-w-[420px] md:top-4 md:right-4',
+          title: `${error.message  || 'something wrong happened'}`,
+          variant: 'destructive'
+        });
       }
+      toast({
+        className:
+          'top-0 right-0 flex fixed md:max-w-[420px] md:top-4 md:right-4',
+        title: 'Login.',
+        variant: 'default'
+      });
       router.push('/');
 
     } catch (error) {
       console.error('Error Logging up:',);
     }
+    setLoading(false)
   };
   const onSubmit = async (data: UserFormValue) => {
     handleLogin(data)
@@ -94,7 +106,7 @@ export default function UserAuthForm() {
             )}
           />
 
-          <Button disabled={loading} className="ml-auto w-full mt-7" type="submit">
+          <Button loading={loading} className="ml-auto w-full mt-7" type="submit">
             Login
           </Button>
         </form>

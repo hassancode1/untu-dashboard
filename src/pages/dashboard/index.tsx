@@ -2,7 +2,6 @@ import PageHead from '@/components/shared/page-head.jsx';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle
 } from '@/components/ui/card';
@@ -14,26 +13,84 @@ import {
 } from '@/components/ui/tabs.js';
 import Overview from './components/overview.js';
 import RecentSales from './components/recent-sales.js';
+import supabase from '@/lib/supabase.js';
+import { useState,useEffect } from 'react';
+import { Order } from '@/constants/data.js';
+import { DataTableSkeleton } from '@/components/shared/data-table-skeleton.js';
 
 export default function DashboardPage() {
+  const [overview , setOverview] = useState<Order[]>([])
+  const [metrics, setMetrics] = useState({
+    totalRevenue: 0,
+    sales: 0,
+    activeNow: 0,
+    averageOrder:0
+  });
+  const [loading, setLoading] = useState(false)
+  const formatAmount = (amount: number): string => {
+    if (amount === null) {
+      return "N/A"; 
+    }
+    const formattedAmount = amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return `₦${formattedAmount}`;
+  };
+
+  
+  const fetchData = async () => {
+    setLoading(true)
+    try {
+      const { data, error } = await supabase
+      .from('Order')
+      .select('*')
+      .order('created_at')
+      if (error) {
+        return;
+      }
+      
+  
+      const totalRevenue = data.reduce((acc, order) => acc + order.total, 0);
+      const sales = data.length;
+      const activeNowCount = 573;
+  
+      const average = sales > 0 ? totalRevenue / sales : 0;
+      setMetrics({ totalRevenue, sales, activeNow: activeNowCount, averageOrder:average});
+      setOverview(data);
+    } catch (error) {
+    } finally {
+      setLoading(false)
+    }
+  };
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="p-5">
+        <DataTableSkeleton
+          columnCount={10}
+          filterableColumnCount={2}
+          searchableColumnCount={1}
+        />
+      </div>
+    );
+  }
   return (
     <>
       <PageHead title="Dashboard | App" />
       <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
         <div className="flex items-center justify-between space-y-2">
           <h2 className="text-3xl font-bold tracking-tight">
-            Hi, Welcome back 👋
+           Welcome back Halima 👋
           </h2>
         </div>
         <Tabs defaultValue="overview" className="space-y-4">
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="analytics" disabled>
-              Analytics
-            </TabsTrigger>
+
           </TabsList>
           <TabsContent value="overview" className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
@@ -53,37 +110,7 @@ export default function DashboardPage() {
                   </svg>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">$45,231.89</div>
-                  <p className="text-xs text-muted-foreground">
-                    +20.1% from last month
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Subscriptions
-                  </CardTitle>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    className="h-4 w-4 text-muted-foreground"
-                  >
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                    <circle cx="9" cy="7" r="4" />
-                    <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
-                  </svg>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">+2350</div>
-                  <p className="text-xs text-muted-foreground">
-                    +180.1% from last month
-                  </p>
+                  <div className="text-2xl font-bold">{formatAmount(metrics.totalRevenue)}</div>
                 </CardContent>
               </Card>
               <Card>
@@ -104,16 +131,13 @@ export default function DashboardPage() {
                   </svg>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">+12,234</div>
-                  <p className="text-xs text-muted-foreground">
-                    +19% from last month
-                  </p>
+                  <div className="text-2xl font-bold">{metrics.sales}</div>
                 </CardContent>
               </Card>
-              <Card>
+              {/* <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
-                    Active Now
+                    Average order
                   </CardTitle>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -129,12 +153,9 @@ export default function DashboardPage() {
                   </svg>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">+573</div>
-                  <p className="text-xs text-muted-foreground">
-                    +201 since last hour
-                  </p>
+                  <div className="text-2xl font-bold">{formatAmount(metrics.averageOrder)}</div>
                 </CardContent>
-              </Card>
+              </Card> */}
             </div>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-7">
               <Card className="col-span-4">
@@ -148,9 +169,7 @@ export default function DashboardPage() {
               <Card className="col-span-4 md:col-span-3">
                 <CardHeader>
                   <CardTitle>Recent Sales</CardTitle>
-                  <CardDescription>
-                    You made 265 sales this month.
-                  </CardDescription>
+               
                 </CardHeader>
                 <CardContent>
                   <RecentSales />

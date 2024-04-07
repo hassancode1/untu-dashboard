@@ -24,6 +24,12 @@ export const navItems: NavItem[] = [
     href: '/product',
     icon: 'post',
     label: 'Product'
+  },
+  {
+    title: 'Order',
+    href: '/order',
+    icon: 'post',
+    label: 'Order'
   }
 ];
 
@@ -174,3 +180,19 @@ export type Product = {
   description: string;
   images: string;
 };
+
+export type Order = {
+  id:string;
+  product:string;
+  referenceId:string;
+  paymentStatus:string;
+  total:number;
+  deliveryStatus:boolean;
+  firstName:string;
+  phoneNo:string;
+  email:string;
+  address:string;
+  state:string;
+  lastName:string
+ 
+}

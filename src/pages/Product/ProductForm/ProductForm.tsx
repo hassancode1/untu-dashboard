@@ -54,7 +54,7 @@ const CreateProduct = ({ modalClose, openProduct, fetchData }: Props) => {
     category: (openProduct.data as Product)?.category,
     size: (openProduct.data as Product)?.size,
     description: (openProduct.data as Product)?.description,
-    quantity: (openProduct.data as Product)?.quantity
+    quantity: (openProduct.data as Product)?.quantity.toString()
   };
 
   const form = useForm<StudentFormSchemaType>({
